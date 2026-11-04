@@ -12,6 +12,8 @@
 
 2. Clone github nhóm của thầy(ko phải repo này) về máy, xóa toàn bộ file trong folder vừa clone về và coppy toàn bộ file trong foler `int1433-05-20261-grp-int1433-05-0017` (của repo này) vào thay thế
 
-3. Sử dụng ai commit theo lộ trình trong `commit-roadmap.md` theo đúng ngày và đúng người thực hiện đã nêu trong file
+3. Git pull vè rồi sử dụng ai, bảo nó ghi log(theo hướng dẫn trong `commit-roadmap.md`) và commit, push theo lộ trình trong `commit-roadmap.md` theo đúng ngày và đúng người thực hiện đã nêu trong file
+
+4. Push xong thì @all báo với nhóm trong zalo để người tiếp theo push
 
 **CHÚ Ý: PHẢI HỌC CÁC NỘI DUNG TRONG FILE HƯỚNG DẪN THẬT NGHIÊM TÚC VÀ PHẢI HIỂU CHO TÔI!!**
