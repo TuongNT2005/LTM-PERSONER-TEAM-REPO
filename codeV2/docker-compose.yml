@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  lftp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lftp-server
+    # Chế độ network host giúp gói tin UDP Broadcast hoạt động trơn tru trong mạng LAN vật lý
+    network_mode: "host"
+    environment:
+      - LFTP_SERVER_NAME=TKD-LAN-Server
+      - LFTP_TCP_PORT=5000
+      - LFTP_UDP_PORT=5001
+      - LFTP_STORAGE_DIR=/data
+    volumes:
+      - ./storage:/data
+    restart: unless-stopped
+
