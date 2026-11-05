@@ -82,8 +82,6 @@ Giải pháp của nhóm đưa ra là xây dựng 1 mô hình client-server ch�
 | Bùi Văn Đạt - B23DCCN126 | Thiết kế giao thức nhị phân LFTP/1 và bộ đọc ghi thông điệp (`MessageIO`), quản lý thông tin các lượt truyền (`SessionManager`, `TransferSession`), điều phối luồng dữ liệu truyền tải (`UploadManager`, `DownloadManager`), tính toán mã băm SHA-256 lũy tiến và cơ chế tiếp tục truyền khi mất kết nối (`ResumeManager`). |
 | Nguyễn Đình Khải - B23DCCN420 | Xây dựng ứng dụng Client đa luồng (`ClientMain`, `TransferClient`), luồng giao diện bàn phím (`ConsoleUI`) cho phép tạm dừng và hủy truyền, tính toán tốc độ truyền và ETA (`TransferProgress`), và phát triển tính năng tự tìm server qua UDP Broadcast. |
 
-> Mỗi thành viên chịu trách nhiệm độc lập theo từng mảng chức năng từ giao thức, xử lý luồng mạng đến quản lý dữ liệu và giao diện, bảo đảm mọi thành viên đều hiểu sâu và tự bảo vệ được phần việc của mình.
-
 ## 9. Risks & Mitigation
 
 | Rủi ro | Giải pháp khắc phục |
