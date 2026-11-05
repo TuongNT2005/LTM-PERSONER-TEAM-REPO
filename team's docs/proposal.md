@@ -79,7 +79,7 @@ Giải pháp của nhóm đưa ra là xây dựng 1 mô hình client-server ch�
 | Thành viên | Phân công phụ trách chính |
 |------------|---------------------------|
 | Nguyễn Trung Tường - B23DCCN909 | Viết chương trình Server, quản lý Thread Pool tiếp nhận kết nối (`ConnectionListener`, `ClientHandler`), xử lý lưu trữ file (`FileStorage`, `FileManager`), cơ chế quét dọn file tạm khi khởi động và quản lý thời gian chờ (`ConnectionWatcher`). |
-| Bùi Văn Đạt - B23DCCN126 | Thiết kế giao thức nhị phân LFTP/1 và bộ đọc ghi thông điệp (`MessageIO`), quản lý thông tin các lượt truyền (`SessionManager`, `TransferSession`), tính toán mã băm SHA-256 lũy tiến và cơ chế tiếp tục truyền khi mất kết nối (`ResumeManager`). |
+| Bùi Văn Đạt - B23DCCN126 | Thiết kế giao thức nhị phân LFTP/1 và bộ đọc ghi thông điệp (`MessageIO`), quản lý thông tin các lượt truyền (`SessionManager`, `TransferSession`), điều phối luồng dữ liệu truyền tải (`UploadManager`, `DownloadManager`), tính toán mã băm SHA-256 lũy tiến và cơ chế tiếp tục truyền khi mất kết nối (`ResumeManager`). |
 | Nguyễn Đình Khải - B23DCCN420 | Xây dựng ứng dụng Client đa luồng (`ClientMain`, `TransferClient`), luồng giao diện bàn phím (`ConsoleUI`) cho phép tạm dừng và hủy truyền, tính toán tốc độ truyền và ETA (`TransferProgress`), và phát triển tính năng tự tìm server qua UDP Broadcast. |
 
 > Mỗi thành viên chịu trách nhiệm độc lập theo từng mảng chức năng từ giao thức, xử lý luồng mạng đến quản lý dữ liệu và giao diện, bảo đảm mọi thành viên đều hiểu sâu và tự bảo vệ được phần việc của mình.

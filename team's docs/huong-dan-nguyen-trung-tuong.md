@@ -81,6 +81,16 @@ Tất cả code của bạn nằm trong package: [`server/src/lftp/server/`](fil
 - Kiểm tra các socket không gửi dữ liệu quá 60s (`Protocol.TIMEOUT_READ_MS`) để ngắt kết nối.
 - Gọi `sessionManager.removeExpiredSessions()` để thu hồi các phiên tải lên bị bỏ dở quá 30 phút.
 
+### 3.6. `ServerMain.java`, `Server.java` & `ServerConfig.java` (Khởi chạy và nạp cấu hình)
+- **`Server.java`:** Lớp entrypoint thực thi từ dòng lệnh ngoài thư mục gốc, chuyển tiếp trực tiếp các cờ và tham số cấu hình vào `ServerMain.main(args)`.
+- **`ServerConfig.java`:** Nạp các thông số hoạt động của server (cổng TCP mặc định 5000, thư mục lưu trữ `storage/`, số client tối đa 20, hạn ngạch Quota 10 GiB, timeout bắt tay và đọc dữ liệu) từ file cấu hình hoặc biến môi trường.
+- **`ServerMain.java`:** Điều phối toàn bộ vòng đời khởi động của server:
+  1. Khởi tạo các thành phần dùng chung: `FileStorage`, `FileManager`, `SessionManager`.
+  2. Gọi `fileStorage.cleanupTempFilesOnStartup()` để quét dọn các file `.tmp` mồ côi còn sót lại từ phiên chạy trước.
+  3. Khởi động `ConnectionListener` (ThreadPool) và `ConnectionWatcher` (luồng quét timeout).
+  4. Khởi động `DiscoveryServer` trên cổng UDP 5001 để tự động phản hồi client tìm kiếm.
+  5. Đăng ký `Runtime.getRuntime().addShutdownHook()` để đóng ServerSocket, giải phóng ThreadPool và ngắt kết nối an toàn (Graceful Shutdown) khi tắt server.
+
 ---
 
 # 4. KỊCH BẢN VẤN ĐÁP KHI THẦY HỎI (MOCK DEFENSE CHO TƯỜNG)

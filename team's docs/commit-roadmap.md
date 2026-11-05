@@ -69,7 +69,7 @@
 
 ### COMMIT 4 (Sáng 06/11/2026 - Thứ Sáu)
 * **Người commit:** Bùi Văn Đạt
-* **File:** `shared/src/lftp/common/*`, `docs/ai-log.md`
+* **File:** `shared/src/lftp/common/Protocol.java`, `Message.java`, `MessageIO.java`, `FileInfo.java`, `HashUtils.java`, `RequestException.java`, `docs/ai-log.md`
 * **Message:** `Cài đặt tầng giao thức dùng chung và xử lý đóng gói thông điệp`
 * **Nhật ký `docs/ai-log.md`:**
   | # | Date | Member | Tool / model | Task — what you asked | What AI produced | What you kept, changed or rejected — and how you verified it | Files |
@@ -80,7 +80,7 @@
 
 ### COMMIT 5 (Chiều 06/11/2026 - Thứ Sáu)
 * **Người commit:** Nguyễn Trung Tường
-* **File:** `server/src/Server.java`, `server/src/lftp/server/ServerMain.java`, `ConnectionListener.java`, `FileStorage.java`, `docs/ai-log.md`
+* **File:** `server/src/Server.java`, `server/src/lftp/server/ServerMain.java`, `ServerConfig.java`, `ConnectionListener.java`, `FileStorage.java`, `docs/ai-log.md`
 * **Message:** `Cài đặt bộ lắng nghe kết nối server và tầng lưu trữ file trên đĩa`
 * **Nhật ký `docs/ai-log.md`:**
   | # | Date | Member | Tool / model | Task — what you asked | What AI produced | What you kept, changed or rejected — and how you verified it | Files |
@@ -91,8 +91,8 @@
 
 ### COMMIT 6 (Sáng 07/11/2026 - Thứ Bảy)
 * **Người commit:** Bùi Văn Đạt
-* **File:** `server/src/lftp/server/SessionManager.java`, `TransferSession.java`, `docs/ai-log.md`
-* **Message:** `Quản lý phiên truyền tải, băm SHA-256 lũy tiến và cơ chế truyền tiếp`
+* **File:** `server/src/lftp/server/SessionManager.java`, `TransferSession.java`, `UploadManager.java`, `DownloadManager.java`, `docs/ai-log.md`
+* **Message:** `Quản lý phiên truyền tải, băm SHA-256 lũy tiến và điều phối luồng dữ liệu`
 * **Nhật ký `docs/ai-log.md`:**
   | # | Date | Member | Tool / model | Task — what you asked | What AI produced | What you kept, changed or rejected — and how you verified it | Files |
   |:-:|------|--------|--------------|-----------------------|------------------|---------------------------------------------------------------|-------|
@@ -124,7 +124,7 @@
 
 ### COMMIT 9 (Chiều 08/11/2026 - Chủ Nhật)
 * **Người commit:** Nguyễn Đình Khải
-* **File:** `client/src/Client.java`, `client/src/lftp/client/ConsoleUI.java`, `TransferProgress.java`, `docs/ai-log.md`
+* **File:** `client/src/Client.java`, `client/src/lftp/client/ClientMain.java`, `ClientConfig.java`, `ConsoleUI.java`, `TransferProgress.java`, `docs/ai-log.md`
 * **Message:** `Xây dựng giao diện dòng lệnh client và điều khiển truyền tải không khóa`
 * **Nhật ký `docs/ai-log.md`:**
   | # | Date | Member | Tool / model | Task — what you asked | What AI produced | What you kept, changed or rejected — and how you verified it | Files |

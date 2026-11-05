@@ -10,7 +10,7 @@
 Bạn là người chịu trách nhiệm về **"ngôn ngữ giao tiếp & tính toàn vẹn dữ liệu"** của toàn bộ hệ thống:
 1. Thiết kế đặc tả giao thức nhị phân LFTP/1 (12-byte Header, Opcodes, Status Codes, Binary Framing).
 2. Xây dựng tầng đóng gói và bóc tách thông điệp mạng [`MessageIO`](file:///d:/project/BTL%20LTM/int1433-05-20261-grp-int1433-05-0017/server/src/lftp/common/MessageIO.java) (giải quyết lỗi dính gói TCP bằng tiền tố độ dài 4 byte).
-3. Quản lý các phiên truyền tải dữ liệu (`SessionManager`, `TransferSession`), bảo mật bằng mã ngẫu nhiên 128-bit `resumeToken` và chống xung đột ghi đè bằng `activeConnectionId`.
+3. Quản lý các phiên và điều phối luồng truyền nhận dữ liệu (`SessionManager`, `TransferSession`, `UploadManager`, `DownloadManager`), bảo mật bằng mã ngẫu nhiên 128-bit `resumeToken` và chống xung đột ghi đè bằng `activeConnectionId`.
 4. Giải thuật mật mã học **băm lũy tiến SHA-256 (Streaming Hash)** theo từng chunk 64 KiB, xác thực toàn vẹn tức thì trong RAM và nạp lại băm khi phục hồi (`resumeSha256State`).
 5. Cơ chế lưu vết hoàn tất 24 giờ giải quyết sự cố mất mạng ở vạch đích (**Idempotency**).
 
@@ -40,8 +40,12 @@ Bạn là người chịu trách nhiệm về **"ngôn ngữ giao tiếp & tính
 
 Code của bạn nằm ở 2 vị trí: [`shared/src/lftp/common/`](file:///d:/project/BTL%20LTM/int1433-05-20261-grp-int1433-05-0017/shared/src/lftp/common/) và [`server/src/lftp/server/`](file:///d:/project/BTL%20LTM/int1433-05-20261-grp-int1433-05-0017/server/src/lftp/server/)
 
-### 3.1. `Message.java` & `MessageIO.java` (Đóng gói khung mạng)
-- Khung nhị phân trên đường truyền:
+### 3.1. `Protocol.java`, `Message.java`, `MessageIO.java`, `FileInfo.java` & `RequestException.java` (Tầng Giao thức & Đóng gói)
+- **`Protocol.java`:** Chứa toàn bộ bảng hằng số đặc tả: mã phiên bản `VERSION = 1`, các mã lệnh Opcodes (`HELLO=1`, `LIST_FILES=2`, `UPLOAD_INIT=16`...), các mã trạng thái Status Codes (200 OK, 400 Bad Request, 404 Not Found, 409 Conflict, 422 Hash Mismatch, 507 Insufficient Storage), giới hạn khung tối đa 128 KiB và kích thước chunk 64 KiB.
+- **`Message.java`:** Đại diện cho một thông điệp nhị phân hoàn chỉnh gồm 12 byte Header cố định và mảng byte payload, cung cấp các hàm tạo tiện lợi `createRequest()` và `createResponse()`.
+- **`FileInfo.java`:** Cấu trúc dữ liệu chứa thông tin tệp: `fileId`, `fileName`, `fileSize`, `sha256Hex`, `createdAt` phục vụ lệnh duyệt danh sách và kiểm tra tệp.
+- **`RequestException.java`:** Kế thừa từ `Exception`, mang mã trạng thái `statusCode` để khi gặp lỗi trong quá trình xử lý, server chỉ cần ném ra ngoại lệ này và `ClientHandler` sẽ tự động đóng gói thành thông điệp phản hồi lỗi tương ứng.
+- **Khung nhị phân trên đường truyền qua `MessageIO.java`:**
   $$\text{[frameLength (4B)]} + \text{[version (1B)][opcode (1B)][requestId (8B)][status (2B)]} + \text{[body]}$$
 - **Chuỗi Stream:** `Socket` $\rightarrow$ `BufferedStream(64 KiB)` $\rightarrow$ `DataStream (Big-Endian)`.
 - **`writeMessage()`:** Ghi 4 byte `dos.writeInt(frameLength)` $\rightarrow$ ghi 12 byte Header $\rightarrow$ ghi mảng byte `body` $\rightarrow$ gọi `dos.flush()`.
@@ -64,6 +68,14 @@ Code của bạn nằm ở 2 vị trí: [`shared/src/lftp/common/`](file:///d:/p
   So khớp với `session.getFileHash()`. Nếu khớp $\implies$ đổi tên file nguyên tử và chuyển Quota, nếu sai $\implies$ xóa file tạm và ném `STATUS_HASH_MISMATCH (422)`.
 - **`HashUtils.resumeSha256State(tempFile, actualDiskSize)`:**
   Đọc tuần tự từ byte 0 đến byte `actualDiskSize` của file tạm trên đĩa để nạp lại trạng thái băm vào một `MessageDigest` mới, bảo đảm đồng bộ 100% từng bit với đĩa sau sự cố đứt mạng.
+
+### 3.4. `DownloadManager.java` (Điều phối luồng tải xuống)
+- **Cơ chế đọc từng chunk (Streaming):** Mở file chính thức bằng `RandomAccessFile` ở chế độ đọc (`openForDownload`).
+- **`readChunk(offset, requestedBytes)`:**
+  1. Kiểm tra vị trí `offset` hợp lệ (không âm, không vượt quá kích thước tệp `fileInfo.getFileSize()`).
+  2. Cắt chunk tối đa 64 KiB (`Math.min(requestedBytes, Protocol.CHUNK_SIZE)`).
+  3. Dùng `raf.seek(offset)` và `raf.readFully(buffer)` để đọc chính xác từng khối dữ liệu nhị phân gửi về client qua `MessageIO`.
+- **`close()`:** Đóng `RandomAccessFile` an toàn và giải phóng tài nguyên ngay khi hoàn tất lượt tải hoặc khi client ngắt kết nối.
 
 ---
 

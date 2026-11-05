@@ -205,26 +205,37 @@ classDiagram
 
 ### 2.2. Trách nhiệm và phân công công việc
 
-| Thành phần | Vai trò và quan hệ với lớp khác | Người phụ trách |
-|---|---|---|
-| ServerMain | Khởi động và dừng server, tạo SessionManager, FileManager, FileStorage dùng chung, gọi dọn file tạm mồ côi lúc bật máy, khởi động ConnectionListener (Thread Pool), ConnectionWatcher và DiscoveryServer | Nguyễn Trung Tường |
-| ConnectionListener | Lắng nghe kết nối TCP trên cổng 5000, kiểm tra giới hạn MAX_CLIENTS = 20 và chuyển socket cho worker thread trong Thread Pool thực thi qua ClientHandler | Nguyễn Trung Tường |
-| ClientHandler | Tiếp nhận yêu cầu và gửi phản hồi cho client bằng MessageIO. Tạo UploadManager và DownloadManager riêng cho từng lượt truyền, gọi SessionManager để kiểm tra session và gán kết nối phụ trách, gọi FileManager để lấy danh sách file theo phân trang | Nguyễn Trung Tường |
-| FileStorage | Quản lý việc tạo file tạm, ghi dữ liệu, lưu file chính thức cho UploadManager và mở file đọc cho DownloadManager, tự động dọn dẹp các file `.tmp` mồ côi khi server khởi động | Nguyễn Trung Tường |
-| FileManager | Quản lý danh mục file hoàn tất và hạn ngạch dung lượng lưu trữ, sử dụng biến AtomicLong để kiểm tra và cập nhật dung lượng theo cơ chế CAS không khóa, chống deadlock | Nguyễn Trung Tường |
-| ConnectionWatcher | Luồng chạy định kỳ để phát hiện các kết nối không hoạt động quá thời gian chờ, yêu cầu ClientHandler đóng socket và gọi SessionManager dọn dẹp session upload dở quá 30 phút | Nguyễn Trung Tường |
-| MessageIO | Đọc và ghi thông điệp nhị phân theo quy định khung (giới hạn tối đa 128 KiB), kiểm tra độ dài và tính hợp lệ của khung byte trước khi xử lý, dùng chung cho cả server và client | Bùi Văn Đạt |
-| SessionManager | Quản lý bảng session bằng ConcurrentHashMap, cấp phát và kiểm tra resumeToken, chỉ cho phép một kết nối ghi vào session dở tại một thời điểm, dọn dẹp file tạm và hoàn trả dung lượng khi session dở hết hạn | Bùi Văn Đạt |
-| UploadManager | Xử lý một lượt tải lên: ghi dữ liệu vào file tạm, tính toán mã băm SHA-256 lũy tiến bằng MessageDigest theo từng chunk nhận được, cập nhật vị trí và lưu file chính thức khi nhận COMMIT | Bùi Văn Đạt |
-| DownloadManager | Xử lý lượt tải xuống: mở file đọc riêng, theo dõi vị trí đã đọc và gửi từng chunk dữ liệu cho client, đóng file và giải phóng tài nguyên khi hoàn tất hoặc mất kết nối | Bùi Văn Đạt |
-| TransferSession | Đối tượng lưu trữ trạng thái của một lượt truyền (vị trí offset, token, kết nối phụ trách, thời điểm hoạt động cuối), được bảo vệ bằng synchronized hoặc ReentrantLock riêng biệt | Bùi Văn Đạt |
-| HashUtils | Hỗ trợ tính toán mã băm SHA-256 toàn bộ file hoặc cập nhật mã băm lũy tiến, chuyển đổi giữa mảng 32 byte nhị phân và chuỗi 64 ký tự hex | Bùi Văn Đạt |
-| ResumeManager | Lưu trữ thông tin truyền dở xuống đĩa máy client (`CLIENT_STATE_DIR`) để nạp lại và tiếp tục truyền khi client kết nối lại | Bùi Văn Đạt |
-| ClientMain | Quản lý ứng dụng client đa luồng, khởi chạy luồng nền TransferClient và tiếp nhận các lệnh từ người dùng qua ConsoleUI để điều khiển luồng truyền (tạm dừng, tiếp tục, hủy) | Nguyễn Đình Khải |
-| ConsoleUI | Nhận lệnh bàn phím từ người dùng trên luồng chính, hiển thị bảng menu, danh sách file theo trang, thông báo lỗi và tiến độ truyền | Nguyễn Đình Khải |
-| TransferClient | Thực hiện kết nối mạng và gửi nhận thông điệp qua MessageIO trên luồng phụ, hỗ trợ các chức năng xem danh sách có phân trang, tải lên, tải về, tạm dừng và hủy truyền | Nguyễn Đình Khải |
-| TransferProgress | Theo dõi dung lượng đã truyền, tính toán phần trăm, tốc độ truyền hiện tại (MB/s) sử dụng giải thuật trung bình trượt và ước lượng thời gian còn lại (ETA) | Nguyễn Đình Khải |
-| DiscoveryClient & DiscoveryServer | Triển khai cơ chế tự động tìm server trong LAN qua UDP Broadcast trên cổng 5001: Server phản hồi IP/cổng, Client tự nhận diện để kết nối mà không cần nhập IP thủ công | Nguyễn Đình Khải |
+Dưới đây là bảng phân công chi tiết toàn bộ 27 lớp mã nguồn của dự án cho từng thành viên trong nhóm:
+
+| Nhóm chức năng | Lớp / Thành phần | Vai trò và nhiệm vụ chi tiết | Người phụ trách |
+|---|---|---|---|
+| **Server Core & Storage** | `Server` | Lớp entrypoint dòng lệnh ngoài thư mục gốc, chuyển tiếp cờ và tham số khởi động vào `ServerMain` | Nguyễn Trung Tường |
+| | `ServerMain` | Khởi động và dừng server an toàn, tạo các đối tượng dùng chung (`SessionManager`, `FileManager`, `FileStorage`), gọi dọn file tạm `.tmp` mồ côi lúc bật máy, khởi động `ConnectionListener` (Thread Pool), `ConnectionWatcher` và `DiscoveryServer` | Nguyễn Trung Tường |
+| | `ServerConfig` | Nạp và quản lý các tham số cấu hình server (cổng TCP 5000, thư mục lưu trữ, số client tối đa 20, hạn ngạch Quota 10 GiB, thời gian timeout) từ biến môi trường hoặc giá trị mặc định | Nguyễn Trung Tường |
+| | `ConnectionListener` | Lắng nghe kết nối TCP trên cổng 5000, kiểm tra giới hạn MAX_CLIENTS = 20 và chuyển socket cho worker thread trong Thread Pool thực thi qua `ClientHandler` | Nguyễn Trung Tường |
+| | `ClientHandler` | Tiếp nhận yêu cầu và gửi phản hồi cho client bằng `MessageIO`. Tạo `UploadManager` và `DownloadManager` riêng cho từng lượt truyền, gọi `SessionManager` để kiểm tra session và gán kết nối phụ trách, gọi `FileManager` để lấy danh sách file theo phân trang | Nguyễn Trung Tường |
+| | `FileStorage` | Quản lý việc tạo file tạm, ghi dữ liệu, lưu file chính thức cho `UploadManager` và mở file đọc cho `DownloadManager`, tự động dọn dẹp các file `.tmp` mồ côi khi server khởi động | Nguyễn Trung Tường |
+| | `FileManager` | Quản lý danh mục file hoàn tất và hạn ngạch dung lượng lưu trữ, sử dụng biến `AtomicLong` để kiểm tra và cập nhật dung lượng theo cơ chế CAS không khóa, chống deadlock | Nguyễn Trung Tường |
+| | `ConnectionWatcher` | Luồng chạy định kỳ để phát hiện các kết nối không hoạt động quá thời gian chờ (60s), yêu cầu `ClientHandler` đóng socket và gọi `SessionManager` dọn dẹp session upload dở quá 30 phút | Nguyễn Trung Tường |
+| **Giao thức, Băm & Phiên truyền** | `Protocol` | Định nghĩa bảng hằng số đặc tả giao thức LFTP/1: mã ma thuật, opcodes (`HELLO`, `UPLOAD_*`, `DOWNLOAD_*`), status codes (200, 400, 404, 409, 422...), giới hạn khung 128 KiB, chunk 64 KiB | Bùi Văn Đạt |
+| | `Message` | Mô hình hóa khung thông điệp nhị phân gồm 12 byte Header cố định (`version`, `opcode`, `requestId`, `status`) và mảng byte payload, cung cấp các hàm tạo `createRequest`, `createResponse` | Bùi Văn Đạt |
+| | `MessageIO` | Đọc và ghi thông điệp nhị phân theo quy định khung (tiền tố độ dài 4 byte Big-Endian, giới hạn 128 KiB), đọc ghi chuỗi UTF-8 chuẩn không bị giới hạn 64 KiB, dùng chung cho cả server và client | Bùi Văn Đạt |
+| | `FileInfo` | Cấu trúc dữ liệu bất biến lưu trữ metadata của một tệp (`fileId`, `fileName`, `fileSize`, `sha256Hex`, `createdAt`) dùng trong danh mục và truyền tải phân trang | Bùi Văn Đạt |
+| | `RequestException` | Ngoại lệ giao thức chuyên biệt mang mã trạng thái (`statusCode`) và thông điệp lỗi để chuyển đổi tự động thành gói tin phản hồi lỗi trả về cho client | Bùi Văn Đạt |
+| | `HashUtils` | Hỗ trợ tính toán mã băm SHA-256 toàn bộ file hoặc cập nhật mã băm lũy tiến, nạp lại mốc băm từ đĩa khi resume (`resumeSha256State`), chuyển đổi byte sang hex | Bùi Văn Đạt |
+| | `SessionManager` | Quản lý bảng session bằng `ConcurrentHashMap`, cấp phát và kiểm tra `resumeToken`, chỉ cho phép một kết nối ghi vào session dở tại một thời điểm, dọn dẹp file tạm và hoàn trả dung lượng khi session dở hết hạn | Bùi Văn Đạt |
+| | `TransferSession` | Đối tượng lưu trữ trạng thái của một lượt truyền (vị trí offset, token, kết nối phụ trách, `MessageDigest` băm trong RAM, thời điểm hoạt động cuối), được bảo vệ bằng synchronized riêng biệt | Bùi Văn Đạt |
+| | `UploadManager` | Xử lý một lượt tải lên: ghi dữ liệu vào file tạm, tính toán mã băm SHA-256 lũy tiến bằng `MessageDigest` theo từng chunk nhận được, cập nhật vị trí và lưu file chính thức khi nhận COMMIT | Bùi Văn Đạt |
+| | `DownloadManager` | Xử lý lượt tải xuống: mở file đọc riêng, theo dõi vị trí đã đọc và đọc từng chunk dữ liệu 64 KiB gửi cho client, đóng file và giải phóng tài nguyên khi hoàn tất hoặc mất kết nối | Bùi Văn Đạt |
+| **Client & Giao diện đa luồng** | `Client` | Lớp entrypoint dòng lệnh ngoài thư mục gốc phía client, chuyển tiếp cờ và tham số khởi động vào `ClientMain` | Nguyễn Đình Khải |
+| | `ClientMain` | Khởi chạy ứng dụng client, nạp cấu hình và khởi tạo các đối tượng điều khiển, kết nối tới máy chủ | Nguyễn Đình Khải |
+| | `ClientConfig` | Nạp và quản lý các tham số cấu hình client (địa chỉ IP máy chủ, cổng, thư mục lưu file tải về, thời gian timeout) | Nguyễn Đình Khải |
+| | `ConsoleUI` | Nhận lệnh bàn phím từ người dùng trên luồng chính qua Scanner, hiển thị bảng menu, danh sách file theo trang, thông báo lỗi và gửi tác vụ sang luồng worker không khóa | Nguyễn Đình Khải |
+| | `TransferClient` | Thực hiện kết nối mạng và gửi nhận thông điệp qua `MessageIO` trên luồng phụ, kiểm soát cờ `volatile` (`isPaused`, `isCancelled`) để tạm dừng, tiếp tục và hủy truyền tức thì | Nguyễn Đình Khải |
+| | `TransferProgress` | Theo dõi dung lượng đã truyền, tính toán phần trăm, tốc độ truyền hiện tại (MB/s) sử dụng giải thuật trung bình trượt 300ms và ước lượng thời gian còn lại (ETA), vẽ thanh tiến trình trên 1 dòng bằng `\r` | Nguyễn Đình Khải |
+| | `ResumeManager` | Quản lý lưu vết checkpoint truyền dở xuống đĩa máy client (`.state`) bằng mã MD5 đường dẫn, tự động nạp lại và đối chiếu mã hash để gửi `UPLOAD_RESUME` khi truyền lại | Nguyễn Đình Khải |
+| | `DiscoveryClient` | Luồng phía client phát gói tin UDP Broadcast tìm máy chủ trên cổng 5001, tự nhận diện IP/cổng TCP của server mà không cần nhập tay | Nguyễn Đình Khải |
+| | `DiscoveryServer` | Luồng phía server lắng nghe UDP Broadcast trên cổng 5001 và gửi phản hồi gói tin OFFER chứa thông tin kết nối TCP cho client | Nguyễn Đình Khải |
 
 ---
 

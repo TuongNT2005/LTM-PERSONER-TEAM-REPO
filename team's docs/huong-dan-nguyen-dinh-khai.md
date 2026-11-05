@@ -116,6 +116,15 @@ Tất cả code của bạn nằm trong package: [`client/src/lftp/client/`](fil
   `uploadId`, `resumeToken`, `localFilePath`, `fileSize`, `fileHashHex`, `lastOffset`, `savedAtEpochMs`.
 - **Tự động đối soát:** Khi người dùng upload lại cùng tệp, `loadUploadState()` nạp lại dữ liệu, kiểm tra mã băm SHA-256 của file local xem có bị sửa đổi không. Nếu còn nguyên vẹn thì tự động gửi `UPLOAD_RESUME` lên server để truyền tiếp từ byte `lastOffset`.
 
+### 3.6. `ClientMain.java`, `Client.java` & `ClientConfig.java` (Khởi chạy và nạp cấu hình client)
+- **`Client.java`:** Lớp entrypoint thực thi từ dòng lệnh ngoài thư mục gốc, chuyển tiếp cờ và tham số cấu hình vào `ClientMain.main(args)`.
+- **`ClientConfig.java`:** Quản lý các tham số cấu hình ứng dụng client: IP máy chủ (`serverHost`), cổng kết nối TCP (`serverPort`), thư mục lưu file tải về (`downloadDir`), thời gian timeout.
+- **`ClientMain.java`:** Điều phối quy trình khởi động ứng dụng client:
+  1. Nạp cấu hình từ `ClientConfig`.
+  2. Khởi tạo đối tượng `ConsoleUI` để tiếp nhận lệnh từ người dùng.
+  3. Khởi tạo `ResumeManager` trỏ vào thư mục `./client-state/` để sẵn sàng khôi phục lượt truyền dở.
+  4. Lắng nghe các lệnh điều hướng (`discover`, `connect`, `upload`, `download`, `exit`) và điều phối chuyển trạng thái.
+
 ---
 
 # 4. KỊCH BẢN VẤN ĐÁP KHI THẦY HỎI (MOCK DEFENSE CHO KHẢI)
