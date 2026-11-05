@@ -26,7 +26,7 @@ Giải pháp của nhóm đưa ra là xây dựng 1 mô hình client-server ch�
 | Tải lên, xem danh sách file (hỗ trợ phân trang) và tải về file qua CLI khi LAN còn hoạt động, không cần Internet | Có giao diện đồ họa (GUI) | Không xây dựng cơ chế 2 client tự truyền file trực tiếp qua cho nhau (P2P) |
 | Server phục vụ được nhiều client cùng lúc bằng Thread Pool có kiểm soát số luồng | Có tài khoản đăng nhập, lưu lịch sử hoạt động | Không truyền thư mục |
 | Tự động tìm kiếm server trong mạng LAN bằng cơ chế UDP Broadcast mà không cần nhập IP thủ công | | Không hỗ trợ người dùng ngoài mạng nội bộ |
-| Hiển thị tiến độ, tốc độ truyền (MB/s) và thời gian còn lại (ETA); cho phép người dùng tạm dừng hoặc hủy lượt truyền từ client | | Chưa mã hóa dữ liệu truyền trong mạng nội bộ giữa server và client |
+| Hiển thị tiến độ, tốc độ truyền (MB/s) và thời gian còn lại (ETA), cho phép người dùng tạm dừng hoặc hủy lượt truyền từ client | | Chưa mã hóa dữ liệu truyền trong mạng nội bộ giữa server và client |
 | Có cơ chế kiểm tra tính toàn vẹn của file (tính SHA-256 lũy tiến) trước khi công nhận hoàn tất | | |
 | Có cơ chế tiếp tục truyền file khi mất kết nối (resume upload/download) | | |
 | Có cơ chế tự ngắt kết nối khi bên kia không có phản hồi trong 1 khoảng thời gian (timeout) | | |
@@ -47,7 +47,7 @@ Giải pháp của nhóm đưa ra là xây dựng 1 mô hình client-server ch�
 - **Transport:** 
   - TCP tới cổng 5000 của server để truyền dữ liệu file tin cậy và đúng thứ tự.
   - UDP Broadcast trên cổng 5001 để client tự tìm thấy địa chỉ IP của server trong mạng LAN.
-- **Message framing & format:** Trường độ dài 4 byte (giới hạn tối đa 128 KiB), tiếp theo là phiên bản, mã lệnh, mã yêu cầu, trạng thái và nội dung. Số được ghi/đọc bằng DataOutputStream và DataInputStream (ghi byte cao trước); chuỗi dùng UTF-8 chuẩn; dữ liệu file được truyền nguyên dạng byte, không chuyển thành chuỗi. Mỗi kết nối gửi một yêu cầu rồi chờ phản hồi trước khi gửi tiếp.
+- **Message framing & format:** Trường độ dài 4 byte (giới hạn tối đa 128 KiB), tiếp theo là phiên bản, mã lệnh, mã yêu cầu, trạng thái và nội dung. Số được ghi/đọc bằng DataOutputStream và DataInputStream, chuỗi dùng UTF-8 chuẩn, dữ liệu file được truyền nguyên dạng byte, không chuyển thành chuỗi. Mỗi kết nối gửi một yêu cầu rồi chờ phản hồi trước khi gửi tiếp.
 - **First 3–5 commands:** 
 
     | Lệnh | Chiều gửi | Mục đích | 
@@ -61,14 +61,14 @@ Giải pháp của nhóm đưa ra là xây dựng 1 mô hình client-server ch�
 - **Concurrency model:** 
   - Server: Sử dụng `ThreadPoolExecutor` với tối đa 20 worker threads và hàng đợi có giới hạn để nhận kết nối từ `ServerSocket.accept()`. Dùng `ConcurrentHashMap` và phân bậc thứ tự lấy khóa để bảo vệ trạng thái dùng chung.
   - Client: Sử dụng 2 luồng, luồng chính nhận lệnh bàn phím (cho phép hủy/dừng) và luồng phụ thực hiện truyền nhận dữ liệu mạng.
-- **Language(s):** Java 17 / 21 LTS; dùng ServerSocket, Socket, DatagramSocket, các luồng vào/ra có bộ đệm; dùng RandomAccessFile để đọc/ghi tại vị trí cần tiếp tục, MessageDigest để kiểm tra SHA-256 của file.
+- **Language(s):** Java 21 (LTS), dùng ServerSocket, Socket, DatagramSocket, các luồng vào/ra có bộ đệm, dùng RandomAccessFile để đọc/ghi tại vị trí cần tiếp tục, MessageDigest để kiểm tra SHA-256 của file.
 
 ## 7. Alternatives Considered
 
 | Lựa chọn cân nhắc | Nhóm chọn | Lý do lựa chọn |
 |-------------------|:---------:|----------------|
 | Dịch vụ trực tuyến / truyền trong LAN | LAN | Loại bỏ phụ thuộc vào internet khi trao đổi nội bộ, tận dụng hạ tầng mạng LAN hiện có |
-| TCP / UDP | TCP cho dữ liệu, UDP cho tìm server | TCP đảm bảo thứ tự byte cho nội dung file; UDP broadcast giúp client tự tìm thấy server trong mạng nội bộ mà không cần gõ IP thủ công |
+| TCP / UDP | TCP cho dữ liệu, UDP cho tìm server | TCP đảm bảo thứ tự byte cho nội dung file, UDP broadcast giúp client tự tìm thấy server trong mạng nội bộ mà không cần gõ IP thủ công |
 | Tạo luồng tự do / Dùng Thread Pool | Thread Pool | Tránh việc tạo quá nhiều luồng làm cạn kiệt bộ nhớ stack của hệ thống và gây lỗi OutOfMemoryError khi có nhiều kết nối |
 | Danh sách file 1 lần / Phân trang | Phân trang (Pagination) | Giữ kích thước thông điệp nhỏ gọn (dưới 128 KiB), tránh việc server phải cấp phát bộ đệm quá lớn trên bộ nhớ Heap |
 | Server trong LAN / P2P | Server trong LAN | Quản lý file và danh sách tập trung, thuận tiện chia sẻ nhiều người và demo dễ hơn |
@@ -90,9 +90,9 @@ Giải pháp của nhóm đưa ra là xây dựng 1 mô hình client-server ch�
 |--------|---------------------|
 | Thông điệp bị cắt nhỏ hoặc dính liền nhau | Ghi độ dài 4 byte trước mỗi thông điệp, bên nhận đọc đủ số byte đó mới xử lý. Giới hạn độ dài tối đa 128 KiB để tránh tràn bộ đệm RAM. |
 | Mất kết nối khi đang truyền dở | Giữ file tạm và vị trí đã ghi. Khi kết nối lại, hai bên đối chiếu vị trí thực tế trên đĩa để gửi tiếp đúng phần còn thiếu. |
-| Tranh chấp dữ liệu và bế tắc (Deadlock) giữa các luồng | Sắp xếp thứ tự lấy khóa cố định từ SessionManager đến TransferSession rồi đến FileManager; dùng biến AtomicLong cho việc kiểm tra dung lượng để tránh lồng khóa. |
+| Tranh chấp dữ liệu và bế tắc (Deadlock) giữa các luồng | Sắp xếp thứ tự lấy khóa cố định từ SessionManager đến TransferSession rồi đến FileManager, dùng biến AtomicLong cho việc kiểm tra dung lượng để tránh lồng khóa. |
 | Nhiều client kết nối làm cạn kiệt luồng và bộ nhớ | Dùng Thread Pool khống chế tối đa 20 luồng đồng thời, từ chối kết nối mới khi hàng đợi đã đầy. |
-| Ổ đĩa server hết chỗ hoặc bị giữ chỗ quá lâu | Kiểm tra dung lượng trước khi nhận file; rút ngắn thời gian giữ lượt tải dở khi mất kết nối xuống 30 phút để giải phóng dung lượng cho người khác. |
+| Ổ đĩa server hết chỗ hoặc bị giữ chỗ quá lâu | Kiểm tra dung lượng trước khi nhận file, rút ngắn thời gian giữ lượt tải dở khi mất kết nối xuống 30 phút để giải phóng dung lượng cho người khác. |
 
 ## 10. Instructor Feedback
 

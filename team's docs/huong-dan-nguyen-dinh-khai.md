@@ -123,8 +123,8 @@ Tất cả code của bạn nằm trong package: [`client/src/lftp/client/`](fil
 ### Câu 1: "Tại sao Client của em phải chia thành 2 luồng? Nếu gộp chung trên 1 luồng thì hệ thống bị lỗi gì?"
 > **Trả lời:**  
 > *"Dạ thưa Thầy, nếu Client chỉ chạy trên 1 luồng duy nhất, khi thực hiện truyền tệp tin dung lượng lớn (vài trăm MB hoặc vài GB), luồng đó sẽ bị chặn hoàn toàn (Blocking I/O) trong các lệnh đọc đĩa, gửi chunk TCP và chờ gói tin phản hồi từ Server.*  
-> *Hậu quả là người dùng không thể gõ bất kỳ phím nào trên bàn phím; giao diện terminal bị 'đơ' hoàn toàn. Người dùng không thể bấm tạm dừng (pause), không thể hủy bỏ (cancel) và cũng không thể kiểm tra trạng thái.*  
-> *Vì vậy, em áp dụng mô hình 2 luồng: Luồng chính (`ConsoleUI`) chuyên trách đọc lệnh từ bàn phím và phản hồi người dùng ngay tức thì; Tác vụ gửi/nhận mạng nặng được giao cho luồng công nhân nền (`transferExecutor`). Hai luồng phối hợp nhịp nhàng mà không làm nghẽn giao diện."*
+> *Hậu quả là người dùng không thể gõ bất kỳ phím nào trên bàn phím, giao diện terminal bị 'đơ' hoàn toàn. Người dùng không thể bấm tạm dừng (pause), không thể hủy bỏ (cancel) và cũng không thể kiểm tra trạng thái.*  
+> *Vì vậy, em áp dụng mô hình 2 luồng: Luồng chính (`ConsoleUI`) chuyên trách đọc lệnh từ bàn phím và phản hồi người dùng ngay tức thì, tác vụ gửi/nhận mạng nặng được giao cho luồng công nhân nền (`transferExecutor`). Hai luồng phối hợp nhịp nhàng mà không làm nghẽn giao diện."*
 
 ### Câu 2: "Tại sao biến `isPaused` và `isCancelled` phải dùng từ khóa `volatile`? Dùng biến `boolean` thường thì chuyện gì xảy ra?"
 > **Trả lời:**  

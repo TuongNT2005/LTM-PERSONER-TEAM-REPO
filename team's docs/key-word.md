@@ -31,7 +31,7 @@
 
 ## 5. Mô hình Client 2 luồng (UI Thread & Worker Thread)
 - **Quyết định của nhóm:** Tách riêng **luồng chính `ConsoleUI`** (nhận lệnh bàn phím) và **luồng phụ `TransferClient`** (truyền nhận mạng ngầm) thay vì chỉ dùng 1 luồng đơn.
-- **Đặc trưng nổi bật:** Luồng giao diện không bao giờ bị đơ (freeze) khi đang truyền file dung lượng lớn; cho phép người dùng có thể gõ lệnh tạm dừng (`pause`), tiếp tục (`resume`) hoặc hủy bỏ (`cancel`) bất cứ lúc nào.
+- **Đặc trưng nổi bật:** Luồng giao diện không bao giờ bị đơ (freeze) khi đang truyền file dung lượng lớn, cho phép người dùng có thể gõ lệnh tạm dừng (`pause`), tiếp tục (`resume`) hoặc hủy bỏ (`cancel`) bất cứ lúc nào.
 
 ## 6. Từ khóa `volatile` (Đồng bộ trạng thái không cần khóa)
 - **Quyết định của nhóm:** Khai báo các cờ điều khiển `isPaused`, `isCancelled` bằng từ khóa **`volatile`**.

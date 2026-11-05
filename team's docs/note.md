@@ -74,7 +74,7 @@ Tài liệu ghi lại các vấn đề chuyên sâu về Đa luồng (Multi-thre
 
 ### 3.1. Bản chất của CAS và `AtomicLong`
 * **CAS (Compare-And-Swap):** Là giải thuật và **chỉ lệnh phần cứng ở cấp CPU** (trên x86 là `LOCK CMPXCHG`).
-  - Thực hiện nguyên tử thao tác: *"Nếu giá trị ô nhớ hiện tại đúng bằng giá trị kỳ vọng A, hãy thay bằng giá trị mới B; nếu không, từ chối và báo thất bại"*.
+  - Thực hiện nguyên tử thao tác: *"Nếu giá trị ô nhớ hiện tại đúng bằng giá trị kỳ vọng A, hãy thay bằng giá trị mới B, nếu không, từ chối và báo thất bại"*.
   - Toàn bộ diễn ra trong 1 bước không thể bị phân cắt.
 * **`AtomicLong`:** Là lớp bọc cấp cao của Java (`java.util.concurrent.atomic`) bao bọc biến `private volatile long value;`. Các hàm như `compareAndSet()`, `addAndGet()`, `incrementAndGet()` gọi trực tiếp chỉ lệnh CAS phần cứng xuống CPU thông qua `VarHandle`.
 
@@ -119,7 +119,7 @@ $\rightarrow$ **Không có ổ khóa thì không thể xảy ra Deadlock!**
 
 ### 6.1. Thế nào là Khóa lồng nhau?
 * **Khóa lồng nhau (Lock Nesting):** Xảy ra khi một luồng **đang nắm giữ Khóa A** nhưng bên trong phạm vi đồng bộ đó lại **tiếp tục yêu cầu chiếm giữ thêm Khóa B** trước khi nhả khóa A ra.
-* **Nguy cơ:** Dẫn đến **Chờ đợi vòng tròn (Circular Wait)**. Luồng 1 giữ A đòi B; Luồng 2 giữ B đòi A $\rightarrow$ Deadlock, hệ thống tê liệt hoàn toàn.
+* **Nguy cơ:** Dẫn đến **Chờ đợi vòng tròn (Circular Wait)**. Luồng 1 giữ A đòi B, Luồng 2 giữ B đòi A $\rightarrow$ Deadlock, hệ thống tê liệt hoàn toàn.
 
 ### 6.2. Chiến lược 1: Thứ bậc lấy khóa nghiêm ngặt (Strict Lock Hierarchy)
 Nhóm xác lập thứ bậc khóa một chiều cố định:
@@ -166,7 +166,7 @@ Cả 2 loại đều dùng chung lớp `TransferSession` (phân biệt bằng en
 | **Vòng đời & Quản lý** | **Stateful (Lưu trạng thái dài hạn):** Lưu tập trung trong `SessionManager` (`ConcurrentHashMap`). Nếu đứt kết nối mạng, session **vẫn sống trong 30 phút** trong RAM để chờ kết nối lại. | **Stream/Gắn liền theo TCP:** Được quản lý trực tiếp bởi `DownloadManager` trên kết nối của luồng `ClientHandler`. Đóng kết nối là giải phóng tài nguyên ngay. |
 | **Hạn ngạch (Quota)** | **Có:** Phải gọi `fileManager.reserveSpace()` để giữ chỗ trước dung lượng ảo bằng CAS, tránh nhiều client upload cùng lúc gây tràn đĩa. | **Không:** Tải file về không làm tăng dung lượng lưu trữ của Server. |
 | **Kiểm tra SHA-256** | **Server tính băm lũy tiến (Streaming Hash):** Giữ đối tượng `MessageDigest` trong RAM, băm từng chunk 64 KiB để chốt commit tức thì trong RAM mà không cần đọc lại đĩa. | **Client tự kiểm tra:** Server chỉ đọc file `.dat` có sẵn ra gửi. Client nhận đủ 100% thì tự băm file tải về và đối chiếu với mã hash do Server gửi kèm lúc bắt đầu. |
-| **Bảo mật Resume** | Sử dụng mã bí mật **`resumeToken`** (UUID) để chống kẻ khác chiếm đoạt hoặc can thiệp vào phiên tải dở. | Không cần token phức tạp; Client tự lưu checkpoint cục bộ và yêu cầu Server đọc từ vị trí `offset X`. |
+| **Bảo mật Resume** | Sử dụng mã bí mật **`resumeToken`** (UUID) để chống kẻ khác chiếm đoạt hoặc can thiệp vào phiên tải dở. | Không cần token phức tạp, Client tự lưu checkpoint cục bộ và yêu cầu Server đọc từ vị trí `offset X`. |
 
 ### Các Use Case tương ứng:
 1. **Upload Session:**

@@ -61,7 +61,7 @@ Code của bạn nằm ở 2 vị trí: [`shared/src/lftp/common/`](file:///d:/p
   2. Đồng thời cập nhật băm vào RAM: `session.updateDigest(data, 0, length);` $\implies$ Gọi `sha256Digest.update()`.
 - **`finishUpload()` (Lệnh COMMIT):**
   Lấy kết quả băm tức thì từ RAM: `byte[] finalHash = session.getSha256Digest().digest();`
-  So khớp với `session.getFileHash()`. Nếu khớp $\implies$ đổi tên file nguyên tử và chuyển Quota; nếu sai $\implies$ xóa file tạm và ném `STATUS_HASH_MISMATCH (422)`.
+  So khớp với `session.getFileHash()`. Nếu khớp $\implies$ đổi tên file nguyên tử và chuyển Quota, nếu sai $\implies$ xóa file tạm và ném `STATUS_HASH_MISMATCH (422)`.
 - **`HashUtils.resumeSha256State(tempFile, actualDiskSize)`:**
   Đọc tuần tự từ byte 0 đến byte `actualDiskSize` của file tạm trên đĩa để nạp lại trạng thái băm vào một `MessageDigest` mới, bảo đảm đồng bộ 100% từng bit với đĩa sau sự cố đứt mạng.
 

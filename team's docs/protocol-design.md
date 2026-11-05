@@ -5,11 +5,11 @@
 | Thuộc tính | Lựa chọn của nhóm | Lý do lựa chọn |
 |---|---|---|
 | Tên và phiên bản giao thức | LAN File Transfer Protocol, LFTP/1. Trường version có giá trị 1 | Hai bên cần biết có đang hiểu cùng một cách đọc thông điệp hay không |
-| Tầng vận chuyển (Transport) | TCP cổng 5000 cho truyền file; UDP cổng 5001 cho tìm kiếm server | TCP đảm bảo thứ tự byte và độ tin cậy của file; UDP Broadcast giúp client tự tìm thấy server trong mạng nội bộ |
+| Tầng vận chuyển (Transport) | TCP cổng 5000 cho truyền file, UDP cổng 5001 cho tìm kiếm server | TCP đảm bảo thứ tự byte và độ tin cậy của file, UDP Broadcast giúp client tự tìm thấy server trong mạng nội bộ |
 | Cổng mặc định | TCP: 5000, UDP: 5001, có thể cấu hình | Cho phép chạy nhiều server hoặc thay đổi cổng khi cần |
-| Khung thông điệp (Framing) | Ghi độ dài bằng 4 byte rồi ghi đúng số byte nội dung; giới hạn tối đa 128 KiB | Bên nhận biết thông điệp kết thúc ở đâu, đồng thời khống chế bộ đệm RAM để tránh bị cạn kiệt bộ nhớ |
+| Khung thông điệp (Framing) | Ghi độ dài bằng 4 byte rồi ghi đúng số byte nội dung, giới hạn tối đa 128 KiB | Bên nhận biết thông điệp kết thúc ở đâu, đồng thời khống chế bộ đệm RAM để tránh bị cạn kiệt bộ nhớ |
 | Định dạng dữ liệu | Nhị phân. Số dùng DataOutputStream và DataInputStream, dữ liệu file giữ nguyên dạng byte | Phù hợp kiến thức luồng vào ra trong Java, không cần đổi nội dung file thành chuỗi và xử lý nhanh |
-| Quản lý phiên (Session model) | Server quản lý session theo thời gian thực; SessionManager tạo và giữ session | Upload dở được giữ tối đa 30 phút để tải tiếp. Download bị ngắt thì client lưu vị trí và yêu cầu lượt mới từ vị trí đó |
+| Quản lý phiên (Session model) | Server quản lý session theo thời gian thực, SessionManager tạo và giữ session | Upload dở được giữ tối đa 30 phút để tải tiếp. Download bị ngắt thì client lưu vị trí và yêu cầu lượt mới từ vị trí đó |
 | Mã hóa ký tự | UTF-8 chuẩn cho tên file và thông báo, nội dung file không đổi mã | Hỗ trợ tốt tiếng Việt có dấu và giữ nguyên vẹn nội dung byte của file nguồn |
 
 ---
@@ -270,7 +270,7 @@ sequenceDiagram
 | Hạn ngạch lưu trữ | 10737418240 byte (10 GiB) | Kiểm soát tổng dung lượng ổ đĩa của server, bảo đảm an toàn hệ điều hành |
 | Số kết nối tối đa | MAX_CLIENTS = 20 kết nối | Khống chế số lượng luồng worker chạy đồng thời trong Thread Pool của server |
 | Số file tối đa | MAX_CATALOG_FILES = 10000 | Giới hạn danh mục file để danh sách không tăng vô hạn |
-| Thời gian giữ lượt dở | 30 phút (kể từ khi mất kết nối) | Hạn chế tình trạng giữ chỗ ảo dung lượng quá lâu; sau 30 phút không kết nối lại sẽ xóa file tạm và hoàn trả quota |
+| Thời gian giữ lượt dở | 30 phút (kể từ khi mất kết nối) | Hạn chế tình trạng giữ chỗ ảo dung lượng quá lâu, sau 30 phút không kết nối lại sẽ xóa file tạm và hoàn trả quota |
 | Thời gian giữ kết quả hoàn tất | 24 giờ | Cho phép client hỏi lại kết quả hoàn tất nếu bị mất kết nối ở bước commit cuối |
 | Dọn dẹp lúc khởi động | Tự động quét và xóa file tạm `.tmp` | Tránh tích tụ file rác trên đĩa server khi server bị tắt hoặc khởi động lại đột ngột |
 | Thời gian chờ đọc dữ liệu | 60000 ms (60 giây) | Tự ngắt kết nối nếu phía bên kia ngừng gửi dữ liệu mạng |
