@@ -13,8 +13,7 @@
 
 | # | Date | Member | Tool / model | Task — what you asked | What AI produced | What you kept, changed or rejected — and how you verified it | Files |
 |:-:|------|--------|--------------|-----------------------|------------------|---------------------------------------------------------------|-------|
-| 0 | *(example — delete)* | *Nguyen Van A* | *Claude* | *Compare thread-per-client vs. NIO selector for our chat server* | *Comparison table + sample selector loop* | *Chose a fixed thread pool instead (easier to reason about locking); rewrote the accept loop; tested with 50 concurrent clients* | *`docs/architecture.md`, `server/src/Server.java`* |
-| 1 | | | | | | | |
+| 1 | 26/10/2026 | Nguyễn Trung Tường | Antigravity | Gợi ý khung đề xuất dự án truyền file mạng LAN | Dàn ý proposal theo chuẩn môn học | Giữ khung sườn, tự viết lại bài toán thực tế và thống nhất giới hạn với nhóm | `docs/proposal.md`, `docs/ai-log.md` | 
 
 ---
 
