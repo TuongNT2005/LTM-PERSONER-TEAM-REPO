@@ -205,8 +205,6 @@ classDiagram
 
 ### 2.2. Trách nhiệm và phân công công việc
 
-Dưới đây là bảng phân công chi tiết toàn bộ 27 lớp mã nguồn của dự án cho từng thành viên trong nhóm:
-
 | Nhóm chức năng | Lớp / Thành phần | Vai trò và nhiệm vụ chi tiết | Người phụ trách |
 |---|---|---|---|
 | **Server Core & Storage** | `Server` | Lớp entrypoint dòng lệnh ngoài thư mục gốc, chuyển tiếp cờ và tham số khởi động vào `ServerMain` | Nguyễn Trung Tường |
